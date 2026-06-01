@@ -58,21 +58,26 @@
                             </td>
                             <td class="px-4 py-3 text-gray-400 text-xs">{{ $user->created_at->diffForHumans() }}</td>
                             <td class="px-4 py-3 text-right space-x-2">
-                                <form method="POST" action="/dashboard/approve/{{ $user->id }}" class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                        class="bg-green-600 hover:bg-green-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
-                                        Approve
-                                    </button>
-                                </form>
-                                <form method="POST" action="/dashboard/reject/{{ $user->id }}" class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                        class="bg-red-700 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition"
-                                        onclick="return confirm('Reject {{ $user->username }}?')">
-                                        Reject
-                                    </button>
-                                </form>
+                                <button type="button"
+                                    data-modal="confirm-modal"
+                                    data-action="/dashboard/approve/{{ $user->id }}"
+                                    data-title="Approve user"
+                                    data-message="Approve <strong>{{ $user->username }}</strong>? They will be able to log in immediately."
+                                    data-confirm="Approve"
+                                    data-confirm-class="bg-green-600 hover:bg-green-500"
+                                    class="bg-green-600 hover:bg-green-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
+                                    Approve
+                                </button>
+                                <button type="button"
+                                    data-modal="confirm-modal"
+                                    data-action="/dashboard/reject/{{ $user->id }}"
+                                    data-title="Reject user"
+                                    data-message="Reject <strong>{{ $user->username }}</strong>? They will not be able to access the app."
+                                    data-confirm="Reject"
+                                    data-confirm-class="bg-red-600 hover:bg-red-500"
+                                    class="bg-red-700 hover:bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
+                                    Reject
+                                </button>
                             </td>
                         </tr>
                         @endforeach
@@ -118,14 +123,16 @@
                             </td>
                             <td class="px-4 py-3 text-gray-400 text-xs">{{ $user->created_at->diffForHumans() }}</td>
                             <td class="px-4 py-3 text-right">
-                                <form method="POST" action="/dashboard/reject/{{ $user->id }}" class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                        class="border border-red-700 hover:bg-red-700 text-red-400 hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg transition"
-                                        onclick="return confirm('Revoke {{ $user->username }}\'s access?')">
-                                        Revoke
-                                    </button>
-                                </form>
+                                <button type="button"
+                                    data-modal="confirm-modal"
+                                    data-action="/dashboard/reject/{{ $user->id }}"
+                                    data-title="Revoke access"
+                                    data-message="Revoke <strong>{{ $user->username }}</strong>'s access? They will be logged out and blocked."
+                                    data-confirm="Revoke"
+                                    data-confirm-class="bg-red-600 hover:bg-red-500"
+                                    class="border border-red-700 hover:bg-red-700 text-red-400 hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
+                                    Revoke
+                                </button>
                             </td>
                         </tr>
                         @endforeach
@@ -171,13 +178,16 @@
                             </td>
                             <td class="px-4 py-3 text-gray-500 text-xs">{{ $user->created_at->diffForHumans() }}</td>
                             <td class="px-4 py-3 text-right">
-                                <form method="POST" action="/dashboard/approve/{{ $user->id }}" class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                        class="border border-green-700 hover:bg-green-700 text-green-400 hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
-                                        Re-approve
-                                    </button>
-                                </form>
+                                <button type="button"
+                                    data-modal="confirm-modal"
+                                    data-action="/dashboard/approve/{{ $user->id }}"
+                                    data-title="Re-approve user"
+                                    data-message="Re-approve <strong>{{ $user->username }}</strong>? They will be able to log in again."
+                                    data-confirm="Re-approve"
+                                    data-confirm-class="bg-green-600 hover:bg-green-500"
+                                    class="border border-green-700 hover:bg-green-700 text-green-400 hover:text-white text-xs font-medium px-3 py-1.5 rounded-lg transition">
+                                    Re-approve
+                                </button>
                             </td>
                         </tr>
                         @endforeach
@@ -188,4 +198,66 @@
     </section>
 
 </div>
+
+{{-- Confirmation Modal --}}
+<div id="confirm-modal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
+        <h3 id="modal-title" class="text-base font-semibold text-white mb-2"></h3>
+        <p id="modal-message" class="text-gray-400 text-sm mb-6 leading-relaxed"></p>
+        <div class="flex justify-end gap-3">
+            <button type="button" id="modal-cancel"
+                class="px-4 py-2 text-sm text-gray-400 hover:text-white transition rounded-lg hover:bg-gray-700">
+                Cancel
+            </button>
+            <form id="modal-form" method="POST">
+                @csrf
+                <button type="submit" id="modal-confirm"
+                    class="px-4 py-2 text-sm text-white font-medium rounded-lg transition">
+                    Confirm
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal    = document.getElementById('confirm-modal');
+    const title    = document.getElementById('modal-title');
+    const message  = document.getElementById('modal-message');
+    const form     = document.getElementById('modal-form');
+    const confirm  = document.getElementById('modal-confirm');
+    const cancel   = document.getElementById('modal-cancel');
+
+    function openModal(btn) {
+        title.textContent    = btn.dataset.title;
+        message.innerHTML    = btn.dataset.message;
+        form.action          = btn.dataset.action;
+        confirm.textContent  = btn.dataset.confirm;
+        confirm.className    = `px-4 py-2 text-sm text-white font-medium rounded-lg transition ${btn.dataset.confirmClass}`;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    document.querySelectorAll('[data-modal="confirm-modal"]').forEach(btn => {
+        btn.addEventListener('click', () => openModal(btn));
+    });
+
+    cancel.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', e => {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+    });
+})();
+</script>
 @endsection
