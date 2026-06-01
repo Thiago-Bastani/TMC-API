@@ -12,6 +12,33 @@ use Illuminate\Http\JsonResponse;
 
 class MessageController extends Controller
 {
+    public function index(Request $request, string $username): JsonResponse
+    {
+        $me     = $request->user();
+        $other  = User::approved()->where('username', $username)->first();
+
+        if (!$other) {
+            return response()->json(['message' => 'User not found.'], 404);
+        }
+
+        $cursor = $request->integer('cursor', 0);
+
+        $messages = Message::where(function ($q) use ($me, $other) {
+            $q->where('sender_id', $me->id)->where('receiver_id', $other->id);
+        })->orWhere(function ($q) use ($me, $other) {
+            $q->where('sender_id', $other->id)->where('receiver_id', $me->id);
+        })
+        ->when($cursor > 0, fn($q) => $q->where('id', '<', $cursor))
+        ->with('sender:id,username,prof_pic')
+        ->orderByDesc('id')
+        ->limit(50)
+        ->get()
+        ->reverse()
+        ->values();
+
+        return response()->json($messages);
+    }
+
     public function store(SendMessageRequest $request, SupabaseStorageService $storage): JsonResponse
     {
         $me         = $request->user();

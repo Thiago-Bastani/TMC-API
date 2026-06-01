@@ -10,6 +10,17 @@ use Illuminate\Http\Request;
 
 class FriendController extends Controller
 {
+    public function pendingRequests(Request $request): JsonResponse
+    {
+        $requests = FriendRequest::where('receiver_id', $request->user()->id)
+            ->where('status', 'pending')
+            ->with('sender:id,username,prof_pic')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($requests);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
