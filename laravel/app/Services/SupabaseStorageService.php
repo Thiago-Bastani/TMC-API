@@ -3,45 +3,27 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class SupabaseStorageService
 {
-    private string $internalUrl;
-    private string $publicUrl;
-    private string $serviceKey;
-    private string $bucket;
-
-    public function __construct()
-    {
-        $this->internalUrl = rtrim(config('supabase.internal_url'), '/');
-        $this->publicUrl   = rtrim(config('supabase.public_url'), '/');
-        $this->serviceKey  = config('supabase.service_key');
-        $this->bucket      = config('supabase.bucket');
-    }
-
     public function upload(UploadedFile $file, int $senderId): array
     {
-        $ext      = $file->getClientOriginalExtension();
-        $path     = "messages/{$senderId}/" . Str::uuid() . ".{$ext}";
-        $mime     = $file->getMimeType();
-        $contents = file_get_contents($file->getRealPath());
+        $ext  = $file->getClientOriginalExtension();
+        $mime = $file->getMimeType();
+        $path = "messages/{$senderId}/" . Str::uuid() . ".{$ext}";
 
-        $response = Http::withHeaders([
-            'Authorization' => "Bearer {$this->serviceKey}",
-            'Content-Type'  => $mime,
-        ])->withBody($contents, $mime)
-          ->post("{$this->internalUrl}/storage/v1/object/{$this->bucket}/{$path}");
+        Storage::disk('public')->putFileAs(
+            "messages/{$senderId}",
+            $file,
+            basename($path)
+        );
 
-        if ($response->failed()) {
-            throw new \RuntimeException('File upload to Supabase Storage failed: ' . $response->body());
-        }
-
-        $publicUrl = "{$this->publicUrl}/storage/v1/object/public/{$this->bucket}/{$path}";
+        $url = url("storage/messages/{$senderId}/" . basename($path));
 
         return [
-            'url'  => $publicUrl,
+            'url'  => $url,
             'type' => $this->resolveMediaType($mime),
         ];
     }

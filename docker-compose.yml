@@ -64,52 +64,8 @@ services:
       REPLICATION_POLL_INTERVAL: 100
       JWT_SECRET: ${JWT_SECRET}
       MAX_REPLICATION_LAG_MB: 0
-    networks:
-      - tmc-network
-
-  ############################################################
-  # Supabase — Storage
-  ############################################################
-  storage:
-    image: supabase/storage-api:v1.11.13
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      rest:
-        condition: service_started
-    environment:
-      ANON_KEY: ${SUPABASE_ANON_KEY}
-      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-      POSTGREST_URL: http://rest:3000
-      PGRST_JWT_SECRET: ${JWT_SECRET}
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
-      FILE_SIZE_LIMIT: 52428800
-      STORAGE_BACKEND: file
-      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
-      TENANT_ID: stub
-      REGION: stub
-      GLOBAL_S3_BUCKET: stub
-      ENABLE_IMAGE_TRANSFORMATION: "true"
-      IMGPROXY_URL: http://imgproxy:5001
-    volumes:
-      - supabase-storage-data:/var/lib/storage
-    networks:
-      - tmc-network
-
-  ############################################################
-  # Supabase — Image Proxy
-  ############################################################
-  imgproxy:
-    image: darthsim/imgproxy:v3.8.0
-    restart: unless-stopped
-    environment:
-      IMGPROXY_BIND: ":5001"
-      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
-      IMGPROXY_USE_ETAG: "true"
-      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
-    volumes:
-      - supabase-storage-data:/var/lib/storage:ro
+      RLIMIT_NOFILE: "4096"
+      APP_NAME: realtime
     networks:
       - tmc-network
 
@@ -133,7 +89,7 @@ services:
       - tmc-network
 
   ############################################################
-  # Supabase — Kong (API Gateway)
+  # Supabase — Kong (API Gateway — Realtime WebSocket)
   ############################################################
   kong:
     image: kong:2.8.1
@@ -177,11 +133,7 @@ services:
       DB_DATABASE: postgres
       DB_USERNAME: postgres
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      SUPABASE_INTERNAL_URL: http://kong:8000
-      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8000}
-      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-messages}
+      FILESYSTEM_DISK: public
       SESSION_DRIVER: file
       CACHE_STORE: file
     volumes:
@@ -202,12 +154,12 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./laravel/public:/var/www/html/public:ro
+      - laravel-storage:/var/www/html/storage:ro
     networks:
       - tmc-network
 
 volumes:
   supabase-db-data:
-  supabase-storage-data:
   laravel-storage:
 
 networks:

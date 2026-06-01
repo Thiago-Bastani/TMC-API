@@ -117,10 +117,10 @@ services:
 consumers:
   - username: anon
     keyauth_credentials:
-      - key: ${SUPABASE_ANON_KEY}
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMzQwNjE3LCJleHAiOjk5OTk5OTk5OTl9.oxwsk7OJ8XUNBbZb-kA9wRmKmW3PRouwVz3VtWYTyPI
   - username: service_role
     keyauth_credentials:
-      - key: ${SUPABASE_SERVICE_KEY}
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODAzNDA2MTcsImV4cCI6OTk5OTk5OTk5OX0.mQxFZ5lTXB9kXVu26tX_NkduqZ7-JwuaXI9MLtpKsFs
 
 ###############################################################################
 # ACL
