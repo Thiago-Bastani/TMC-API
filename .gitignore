@@ -1,0 +1,9 @@
+.env
+laravel/vendor/
+laravel/node_modules/
+laravel/.env
+laravel/storage/logs/
+laravel/storage/framework/cache/
+laravel/storage/framework/sessions/
+laravel/storage/framework/views/
+laravel/bootstrap/cache/
