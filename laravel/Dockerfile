@@ -31,6 +31,10 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy source
 COPY . .
 
+# Ensure required directories exist before autoload generation
+RUN mkdir -p bootstrap/cache storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
+    && chmod -R 775 bootstrap/cache storage
+
 RUN composer dump-autoload --optimize
 
 # Permissions
