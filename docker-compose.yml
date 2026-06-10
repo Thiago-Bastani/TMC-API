@@ -157,6 +157,7 @@ services:
       - laravel-storage:/var/www/html/storage:ro
     networks:
       - tmc-network
+      - easypanel
 
 volumes:
   supabase-db-data:
@@ -165,3 +166,5 @@ volumes:
 networks:
   tmc-network:
     driver: bridge
+  easypanel:
+    external: true
